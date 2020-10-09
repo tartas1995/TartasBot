@@ -1,0 +1,17 @@
+{
+  "name": "d4rn4sbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "sqlite3": "^5.0.0",
+    "tmi.js": "^1.5.0",
+    "twitch-chat-client": "^4.2.6"
+  }
+}
