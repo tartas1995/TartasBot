@@ -1,4 +1,5 @@
 const tables = require('./tables')
+const actions = require('./actions')
 
 const db = new Promise((resolve, reject) => {
     const sqlite3 = require('sqlite3').verbose();
@@ -10,21 +11,22 @@ const db = new Promise((resolve, reject) => {
         }
     })
 }).then((database) => {
-    database.serialize(() => {
-        for (key in tables) {
-            const table = tables[key];
-            database.prepare(table).run().finalize();
-        }
+    return new Promise((resolve) => {
+        new Promise((resolve) => {
+            database.serialize(() => {
+                for (key in tables) {
+                    const table = tables[key];
+                    database.prepare(table).run().finalize();
+                }
+                resolve()
+            })
+        }).then(() => {
+            actions['close'] = () => {
+                database.close()
+            };
+            resolve(actions.load(database))
+        })
     })
 })
 
-const close = () => {
-    db.then(() => {
-        db.close()
-    })
-}
-
-module.exports = {
-    db,
-    close
-};
+module.exports = db
