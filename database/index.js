@@ -1,6 +1,8 @@
+//imports
 const tables = require('./tables')
 const actions = require('./actions')
 
+//open database
 const db = new Promise((resolve, reject) => {
     const sqlite3 = require('sqlite3').verbose();
     const database = new sqlite3.Database('var/tartasbot.db', (e) => {
@@ -11,22 +13,36 @@ const db = new Promise((resolve, reject) => {
         }
     })
 }).then((database) => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         new Promise((resolve) => {
             database.serialize(() => {
+                const promises = []
                 for (key in tables) {
                     const table = tables[key];
-                    database.prepare(table).run().finalize();
+                    promises.push(
+                        new Promise((resolve, reject) => {
+                            database.run(table, (e) => {
+                                if (e) {
+                                    reject(e)
+                                } else {
+                                    resolve()
+                                }
+                            });
+                        })
+                    )
                 }
-                resolve()
+                Promise.all(promises).then(resolve)
             })
         }).then(() => {
-            actions['close'] = () => {
+            const interf = actions.load(database)
+            interf['close'] = () => {
                 database.close()
             };
-            resolve(actions.load(database))
-        })
+            resolve(interf)
+        }).catch(reject)
     })
+}).catch((e) => {
+    console.error(e)
 })
 
 module.exports = db
