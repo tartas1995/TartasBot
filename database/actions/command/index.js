@@ -1,9 +1,9 @@
 const create = require('./create')
 const del = require('./delete')
-const get = require('./get')
+const getAll = require('./getAll')
 
 module.exports = {
     create,
-    get,
+    getAll,
     delete: del
 }

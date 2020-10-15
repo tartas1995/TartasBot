@@ -1,9 +1,14 @@
 require('dotenv').config()
 const tmi = require('tmi.js');
-//add sqlite3
+let db;
+require('./database').then((database) => {
+    db = database
+})
+const commands = require('./handler/loadCommands');
+const Command = require('./models/command');
 
 let discordLinkCounter = 0;
-const DiscordTriggerLimit = 7;
+const DiscordTriggerLimit = 21;
 
 const wait = timeout => {
     return new Promise((resolve) => {
@@ -31,7 +36,52 @@ const client = new tmi.Client({
 client.connect().catch(console.error);
 client.on('message', (channel, tags, message, self) => {
     if (self) return;
-    const lowercaseMessage = message.toLowerCase();
+    console.log(commands)
+    const addC = /^!addC ([!|%]?[a-zA-Z]+%?) (.*)/
+    if (addC.test(message)) {
+        const structure = message.match(addC)
+        let trigger = structure[1];
+        let response = structure[2];
+        const startWith = !/^%/.test(trigger)
+        const endWith = !/%$/.test(trigger)
+        if (!startWith) {
+            trigger = trigger.slice(0, trigger.length)
+        }
+        if (!endWith) {
+            trigger = trigger.slice(1, -1)
+        }
+        const command = new Command(null, trigger, response, channel, startWith, endWith)
+        commands.push(command)
+        db.command.create(command)
+        return;
+    }
+    const removeC = /^!removeC ([!|%]?[a-zA-Z]+%?)/
+    if (addC.test(message)) {
+        const structure = message.match(addC)
+        let trigger = structure[1];
+        const startWith = !/^%/.test(trigger)
+        const endWith = !/%$/.test(trigger)
+        if (!startWith) {
+            trigger = trigger.slice(0, trigger.length)
+        }
+        if (!endWith) {
+            trigger = trigger.slice(1, -1)
+        }
+        const command = new Command(null, trigger, response, channel, startWith, endWith)
+        commands.push(command)
+        db.command.delete(command)
+        return;
+    }
+    for (let key in commands) {
+        const command = commands[key]
+        if (command.channel === null || command.channel === channel) {
+            if (command.regex().test(message)) {
+                client.say(channel, command.response)
+            }
+        }
+    }
+    
+    /*
     if (lowercaseMessage.includes(' sif ')) {
         client.say(channel, `Sif, der reingemodded Hund!`)
     } else if (lowercaseMessage === "***") {
@@ -65,4 +115,5 @@ client.on('message', (channel, tags, message, self) => {
             client.say(channel, `ok PogChamp`)
         })
     }
+    */
 });

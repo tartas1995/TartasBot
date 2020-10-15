@@ -1,11 +1,11 @@
 module.exports = (db) => {
-    return (trigger, channel = null) => {
+    return (command) => {
         return new Promise((resolve, reject) => {
             const stmt = db.run(
                 "DELETE FROM command WHERE trigger = $trigger and channel = $channel",
                 {
-                    '$trigger': trigger,
-                    '$channel': channel,
+                    '$trigger': command.trigger,
+                    '$channel': command.channel,
                 },
                 (err) => {
                     if (!!err) {

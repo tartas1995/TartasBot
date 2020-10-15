@@ -1,18 +1,14 @@
 module.exports = (db) => {
-    return (trigger, response, startWith, endWith, channel = null) => {
+    return (command) => {
         return new Promise((resolve, reject) => {
-            if (!startWith) {
-                trigger = `%${trigger}`
-            }
-            if (!endWith) {
-                trigger = `${trigger}%`
-            }
             const stmt = db.run(
-                "INSERT INTO command (trigger, response, channel) VALUES ($trigger, $response, $channel)",
+                "INSERT INTO command (trigger, response, channel, startWith, endWith) VALUES ($trigger, $response, $channel, $startWith, $endWith)",
                 {
-                    '$trigger': trigger,
-                    '$response': response,
-                    '$channel': channel,
+                    '$trigger': command.trigger,
+                    '$response': command.response,
+                    '$channel': command.channel,
+                    '$startWith': command.startWith,
+                    '$endWith': command.endWith,
                 },
                 (err) => {
                     if (!!err) {

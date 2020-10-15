@@ -1,12 +1,8 @@
 module.exports = (db) => {
-    return (command) => {
+    return () => {
         return new Promise((resolve, reject) => {
-            const stmt = db.get(
-                "SELECT * FROM command where ",
-                {
-                    $id: command.id,
-                    $channel: channel,
-                },
+            const stmt = db.all(
+                "SELECT * FROM command",
                 (err, rows) => {
                     if (!!err) {
                         reject(err)
