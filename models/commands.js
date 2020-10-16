@@ -1,16 +1,16 @@
 class Commands {
-    list;
+    list;//array with all the commands
 
     constructor() {
         this.list = []
-        this[Symbol.iterator] = this.iterator
+        this[Symbol.iterator] = this.iterator//replace iterator with custom iterator
     }
 
-    *iterator() {
+    *iterator() {//act like iterator of this.list
         yield* this.list
     }
 
-    remove(command) {
+    remove(command) {//remove command from list
         let resultValue = false
         if (command.id !== null) {
             let index = this.list.findIndex(element => {

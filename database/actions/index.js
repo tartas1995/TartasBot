@@ -1,9 +1,12 @@
-const command = require('./command')
+const command = require('./command')//get object with all the command related database functions
 
-const actions = {
+const actions = {//create object with all entites in the database
     command
 }
-
+/**
+ * converts actions object by rebuilding object and replace the function with the return value of the functions
+ * @param {sqlite3.Database} db 
+ */
 const load = (db) => {
     const actionCollection = {}
     for (let sectionKey in actions) {

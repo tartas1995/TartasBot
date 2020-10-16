@@ -1,3 +1,8 @@
+/**
+ * function that returns a function with access to the database.
+ * the return function is used to create command in the database
+ * @param {sqlite3.Database} db 
+ */
 module.exports = (db) => {
     return (command) => {
         return new Promise((resolve, reject) => {

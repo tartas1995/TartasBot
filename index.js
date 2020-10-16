@@ -1,15 +1,19 @@
-require('dotenv').config()
-const tmi = require('tmi.js');
-let db;
+require('dotenv').config() //loads .env into process.env
+const tmi = require('tmi.js'); //twitch chat api client
+let db; //set by ./database object with function to take actions in the database
 require('./database').then((database) => {
     db = database
 })
-const commands = require('./handler/loadCommands');
-const Command = require('./models/command');
+const commands = require('./handler/loadCommands'); //object (Commands) that contains all know chatcommands loaded from the database
+const Command = require('./models/command');//class Command is used to represent a command
 
-let discordLinkCounter = 0;
-const DiscordTriggerLimit = 21;
+let discordLinkCounter = 0;//useless for the time being
+const DiscordTriggerLimit = 21;//useless for the time being
 
+/**
+ * waits for *timeout* milliseconds and then resolve promise
+ * @param {int} timeout milliseconds that should be waited.
+ */
 const wait = timeout => {
     return new Promise((resolve) => {
         setTimeout(() => {
@@ -18,6 +22,7 @@ const wait = timeout => {
     })
 };
 
+//twitch chat client
 const client = new tmi.Client({
     options: {
         debug: true
@@ -33,55 +38,58 @@ const client = new tmi.Client({
     channels: process.env.channels.split(',')
 });
 
-client.connect().catch(console.error);
-client.on('message', (channel, tags, message, self) => {
-    if (self) return;
-    if (!!tags.badges.broadcaster || !!tags.badges.moderator) {
-        const addC = /^!addC ([!|%]?[a-zA-Z]+%?) (.*)/
-        if (addC.test(message)) {
-            const structure = message.match(addC)
-            let trigger = structure[1];
-            let response = structure[2];
-            const startWith = !/^%/.test(trigger)
-            const endWith = !/%$/.test(trigger)
-            if (!startWith) {
+client.connect().catch(console.error);//connect to twitch
+client.on('message', (channel, tags, message, self) => {//do when receiving message
+    if (self) return;//don't react to yourself
+    if (!!tags.badges.broadcaster || !!tags.badges.moderator) {//if author of the message is mod or broadcaster
+        const addC = /^!addC ([!|%]?[a-zA-Z]+%?) (.*)/ //regex for "!addC" 
+        if (addC.test(message)) { //if message is matching the regex
+            const structure = message.match(addC)//get capture groups
+            let trigger = structure[1]; //capture group 1
+            let response = structure[2]; //capture group 2
+            const startWith = !/^%/.test(trigger) //if it doesn't start with %, message has to start with trigger
+            const endWith = !/%$/.test(trigger)//if it doesn't end with %, message has to end with trigger
+            if (!startWith) {//remove % if present
                 trigger = trigger.slice(0, trigger.length)
             }
-            if (!endWith) {
+            if (!endWith) {//remove % if present
                 trigger = trigger.slice(1, -1)
             }
+            //create command
             const command = new Command(null, trigger, response, channel, startWith, endWith)
-            commands.push(command)
-            db.command.create(command)
-            client.say(channel, `${command.trigger} has been added`)
+            commands.push(command)//add command to commands
+            db.command.create(command)//add command to database
+            client.say(channel, `${command.trigger} has been added`)//return message in chat
             return;
         }
-        const removeC = /^!removeC ([!|%]?[a-zA-Z]+%?)/
-        if (removeC.test(message)) {
-            const structure = message.match(removeC)
-            let trigger = structure[1];
-            const startWith = !/^%/.test(trigger)
-            const endWith = !/%$/.test(trigger)
-            if (!startWith) {
+        const removeC = /^!removeC ([!|%]?[a-zA-Z]+%?)/ //regex for "!removeC"
+        if (removeC.test(message)) { //if message is matching the regex
+            const structure = message.match(removeC) //get capture group
+            let trigger = structure[1]; //capture group 1
+            const startWith = !/^%/.test(trigger)//if it doesn't start with %, message has to start with trigger
+            const endWith = !/%$/.test(trigger)//if it doesn't end with %, message has to end with trigger
+            if (!startWith) {//remove % if present
                 trigger = trigger.slice(0, trigger.length)
             }
-            if (!endWith) {
+            if (!endWith) {//remove % if present
                 trigger = trigger.slice(1, -1)
             }
+            //create command
             const command = new Command(null, trigger, '', channel, startWith, endWith)
-            if (commands.remove(command)) {
+            if (commands.remove(command)) {//remove command from commands, if successful, delete command from database
                 db.command.delete(command)
-                client.say(channel, `${command.trigger} has been removed`)
+                client.say(channel, `${command.trigger} has been removed`)//return message in chat
             } else {
-                client.say(channel, `${command.trigger} not found`)
+                client.say(channel, `${command.trigger} not found`)//return message in chat
             }
             return;
         }
     }
-    for (let command of commands) {
-        if (command.channel === null || command.channel === channel) {
-            if (command.regex().test(message)) {
-                client.say(channel, command.response)
+    //handles custom commands
+    for (let command of commands) { //run through all commands
+        if (command.channel === null || command.channel === channel) { //if command in relevant for channel
+            if (command.regex().test(message)) {//if command shouold be triggered
+                client.say(channel, command.response)//return command response in chat
             }
         }
     }
