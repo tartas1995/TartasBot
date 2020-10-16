@@ -1,5 +1,6 @@
 const Command = require('../models/command')
-let commands = [];
+const Commands = require('../models/commands')
+let commands = new Commands();
 require('../database').then((database) => {
     database.command.getAll().then((rows) => {
         for (let i = 0; i < rows.length; i++) {
