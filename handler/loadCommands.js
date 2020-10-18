@@ -1,3 +1,6 @@
+/**
+ * CURRENTLY NOT USED
+ */
 const Command = require('../models/command')//load Model Command
 const Commands = require('../models/commands')//load Model Commands
 let commands = new Commands();

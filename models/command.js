@@ -19,21 +19,29 @@ class Command {
         this._regex = null
     }
 
-    edit() {//TODO think about the parameters
-        this.isRendered = false
+    getResponse(channel, tags, message) {
+        return this.response.replace('$user', tags.username).replace('$channel', channel).replace('$message', message)
     }
 
-    regex() {//function used to get regex. maybe use proxy in the future.
-        if (!this.isRendered) {
-            this.renderRegex()
-        }
-        return this._regex
+    edit() {//TODO think about the parameters
+        this.isRendered = false
     }
 
     renderRegex() {//renders the regex
         this._regex = new RegExp(`${this.startWith?'^':''}${this.trigger}${this.endWith?'$':''}`)
         this.isRendered = true
     }
+
+    get regex() {
+        if (!this.isRendered) {
+            this.renderRegex()
+        }
+        return this._regex
+    }
+
+    /*get _regex() {
+        throw new Error('private attribute')
+    }*/
 }
 
 module.exports = Command
