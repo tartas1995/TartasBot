@@ -30,6 +30,10 @@ const client = new tmi.Client({
     channels: process.env.channels.split(',')
 });
 
+client.on("connected", (address, port) => {
+    require('./sportstreamNotification')(client)
+});
+
 databaseLoaded.then(() => {
     client.connect().catch(console.error);//connect to twitch
 })
